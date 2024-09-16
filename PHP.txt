@@ -1,0 +1,290 @@
+-- Users Table
+CREATE TABLE Users (
+    UserID INT PRIMARY KEY AUTO_INCREMENT,
+    Username VARCHAR(255) UNIQUE NOT NULL,
+    Password VARCHAR(255) NOT NULL,
+    Email VARCHAR(255) UNIQUE NOT NULL,
+    UserType ENUM('Admin', 'Student', 'Teacher') NOT NULL,
+    Status ENUM('Active', 'Inactive') DEFAULT 'Active'
+);
+
+-- Role Table
+CREATE TABLE Role (
+    RoleID INT PRIMARY KEY AUTO_INCREMENT,
+    RoleName VARCHAR(255) NOT NULL,
+    Description TEXT
+);
+
+-- Permission Table
+CREATE TABLE Permission (
+    PermissionID INT PRIMARY KEY AUTO_INCREMENT,
+    PermissionName VARCHAR(255) NOT NULL
+);
+
+-- RolePermission Table
+CREATE TABLE RolePermission (
+    RolePermissionID INT PRIMARY KEY AUTO_INCREMENT,
+    RoleID INT,
+    PermissionID INT,
+    FOREIGN KEY (RoleID) REFERENCES Role(RoleID),
+    FOREIGN KEY (PermissionID) REFERENCES Permission(PermissionID)
+);
+
+-- Track Table
+CREATE TABLE Track (
+    TrackID INT PRIMARY KEY AUTO_INCREMENT,
+    TrackName VARCHAR(255) NOT NULL
+);
+
+-- Strand Table
+CREATE TABLE Strand (
+    StrandID INT PRIMARY KEY AUTO_INCREMENT,
+    StrandName VARCHAR(255) NOT NULL,
+    TrackID INT,
+    FOREIGN KEY (TrackID) REFERENCES Track(TrackID)
+);
+
+-- Section Table
+CREATE TABLE Section (
+    SectionID INT PRIMARY KEY AUTO_INCREMENT,
+    SectionName VARCHAR(255) NOT NULL,
+    StrandID INT,
+    FOREIGN KEY (StrandID) REFERENCES Strand(StrandID)
+);
+
+-- GradeLevel Table
+CREATE TABLE GradeLevel (
+    GradeLevelID INT PRIMARY KEY AUTO_INCREMENT,
+    GradeLevelName VARCHAR(255) NOT NULL,
+    TrackID INT,
+    FOREIGN KEY (TrackID) REFERENCES Track(TrackID)
+);
+
+-- SchoolYear Table (New)
+CREATE TABLE SchoolYear (
+    SchoolYearID INT PRIMARY KEY AUTO_INCREMENT,
+    YearLabel VARCHAR(10) NOT NULL,
+    StartDate DATE NOT NULL,
+    EndDate DATE NOT NULL
+);
+
+-- Student Table (Updated)
+CREATE TABLE Student (
+    StudentID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(255) NOT NULL,
+    LastName VARCHAR(255) NOT NULL,
+    DateOfBirth DATE NOT NULL,
+    GradeLevelID INT,
+    SectionID INT,
+    UserID INT UNIQUE,
+    PaymentStatus ENUM('Paid', 'Unpaid') DEFAULT 'Unpaid',
+    SchoolYearID INT,
+    FOREIGN KEY (GradeLevelID) REFERENCES GradeLevel(GradeLevelID),
+    FOREIGN KEY (SectionID) REFERENCES Section(SectionID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (SchoolYearID) REFERENCES SchoolYear(SchoolYearID)
+);
+
+-- Teacher Table (Updated)
+CREATE TABLE Teacher (
+    TeacherID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(255) NOT NULL,
+    LastName VARCHAR(255) NOT NULL,
+    Department VARCHAR(255),
+    UserID INT UNIQUE,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+-- Admin Table
+CREATE TABLE Admin (
+    AdminID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(255) NOT NULL,
+    LastName VARCHAR(255) NOT NULL,
+    UserID INT UNIQUE,
+    AdminType ENUM('Super Admin', 'Core Admin', 'Admin'),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+-- Assignment Table (Updated)
+CREATE TABLE Assignment (
+    AssignmentID INT PRIMARY KEY AUTO_INCREMENT,
+    Title VARCHAR(255) NOT NULL,
+    Description TEXT,
+    DueDate DATE,
+    SectionID INT,
+    TeacherID INT,
+    FOREIGN KEY (SectionID) REFERENCES Section(SectionID),
+    FOREIGN KEY (TeacherID) REFERENCES Teacher(TeacherID)
+);
+
+-- Submission Table
+CREATE TABLE Submission (
+    SubmissionID INT PRIMARY KEY AUTO_INCREMENT,
+    SubmissionDate DATE,
+    StudentID INT,
+    AssignmentID INT,
+    Content TEXT,
+    PointsEarned INT,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+    FOREIGN KEY (AssignmentID) REFERENCES Assignment(AssignmentID)
+);
+
+-- PointsSystem Table
+CREATE TABLE PointsSystem (
+    PointsSystemID INT PRIMARY KEY AUTO_INCREMENT,
+    PointsName VARCHAR(255) NOT NULL,
+    PointsValue INT NOT NULL
+);
+
+-- Grade Table
+CREATE TABLE Grade (
+    GradeID INT PRIMARY KEY AUTO_INCREMENT,
+    GradeName VARCHAR(255) NOT NULL,
+    PointsSystemID INT,
+    FOREIGN KEY (PointsSystemID) REFERENCES PointsSystem(PointsSystemID)
+);
+
+-- GradeSystem Table
+CREATE TABLE GradeSystem (
+    GradeSystemID INT PRIMARY KEY AUTO_INCREMENT,
+    SystemName VARCHAR(255) NOT NULL,
+    Description TEXT,
+    PointsThresholds TEXT
+);
+
+-- Portal Table
+CREATE TABLE Portal (
+    PortalID INT PRIMARY KEY AUTO_INCREMENT,
+    PortalName VARCHAR(255) NOT NULL,
+    URL VARCHAR(255) NOT NULL
+);
+
+-- UserLog Table (Updated)
+CREATE TABLE UserLog (
+    LogID INT PRIMARY KEY AUTO_INCREMENT,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    LogType ENUM('Login', 'Action', 'Error', 'Warning') NOT NULL,
+    Message TEXT,
+    UserID INT,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+-- Enrollment Table (Updated)
+CREATE TABLE Enrollment (
+    EnrollmentID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    SectionID INT,
+    EnrollmentDate DATE,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+    FOREIGN KEY (SectionID) REFERENCES Section(SectionID)
+);
+
+-- Transferee Table
+CREATE TABLE Transferee (
+    TransfereeID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    PreviousSchool VARCHAR(255),
+    TransferDate DATE,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
+);
+
+-- TransferOut Table
+CREATE TABLE TransferOut (
+    TransferOutID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    DestinationSchool VARCHAR(255),
+    TransferDate DATE,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
+);
+
+-- Attendance Table
+CREATE TABLE Attendance (
+    AttendanceID INT PRIMARY KEY AUTO_INCREMENT,
+    Date DATE,
+    StudentID INT,
+    SectionID INT,
+    Status ENUM('Present', 'Absent', 'Late') NOT NULL,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+    FOREIGN KEY (SectionID) REFERENCES Section(SectionID)
+);
+
+-- Schedule Table
+CREATE TABLE Schedule (
+    ScheduleID INT PRIMARY KEY AUTO_INCREMENT,
+    Day ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday') NOT NULL,
+    Time TIME NOT NULL,
+    SectionID INT,
+    FOREIGN KEY (SectionID) REFERENCES Section(SectionID)
+);
+
+-- Notification Table
+CREATE TABLE Notification (
+    NotificationID INT PRIMARY KEY AUTO_INCREMENT,
+    Title VARCHAR(255) NOT NULL,
+    Message TEXT NOT NULL,
+    Date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UserID INT,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+-- Parent Table
+CREATE TABLE Parent (
+    ParentID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(255) NOT NULL,
+    LastName VARCHAR(255) NOT NULL,
+    ContactInfo VARCHAR(255),
+    StudentID INT,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
+);
+
+-- GradeChangeRequest Table
+CREATE TABLE GradeChangeRequest (
+    RequestID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    AssignmentID INT,
+    RequestedGrade VARCHAR(255),
+    Reason TEXT,
+    Status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+    FOREIGN KEY (AssignmentID) REFERENCES Assignment(AssignmentID)
+);
+
+-- TeacherApproval Table
+CREATE TABLE TeacherApproval (
+    ApprovalID INT PRIMARY KEY AUTO_INCREMENT,
+    TeacherID INT,
+    Status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    ApprovalDate DATE,
+    FOREIGN KEY (TeacherID) REFERENCES Teacher(TeacherID)
+);
+
+-- ActivityLog Table
+CREATE TABLE ActivityLog (
+    ActivityLogID INT PRIMARY KEY AUTO_INCREMENT,
+    ActivityType VARCHAR(255),
+    Description TEXT,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UserID INT,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+-- Payment Table
+CREATE TABLE Payment (
+    PaymentID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    Amount DECIMAL(10, 2) NOT NULL,
+    PaymentDate DATE NOT NULL,
+    Description TEXT,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
+);
+
+-- ParentTeacherMeeting Table
+CREATE TABLE ParentTeacherMeeting (
+    MeetingID INT PRIMARY KEY AUTO_INCREMENT,
+    StudentID INT,
+    TeacherID INT,
+    MeetingDate DATE,
+    Agenda TEXT,
+    FOREIGN KEY (StudentID) REFERENCES Student(StudentID),
+    FOREIGN KEY (TeacherID) REFERENCES Teacher(TeacherID)
+);
